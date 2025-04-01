@@ -32,7 +32,7 @@ An autoclicker script for the Discord game "The Last Meadow" that automates gras
 3. Open the game
 4. Press F12 to open Developer Tools (or right-click and select "Inspect")
 5. Go to the "Console" tab
-6. Copy the entire content of `script.js` file
+6. Copy the entire content of [`script.js`](https://raw.githubusercontent.com/mudachyo/Discord-The-Last-Meadow/refs/heads/main/script.js) file
 7. Paste it into the console and press Enter
 
 The autoclicker interface should appear as a gear icon (⚙️) in the bottom right corner of the screen. Click it to open settings.
