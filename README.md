@@ -1,62 +1,127 @@
-# Discord The Last Meadow Autoclicker
+# Discord Game Bot
 
 <div align="center">
-    <img src="https://img.shields.io/badge/Discord-The%20Last%20Meadow-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord Badge"/>
+    <img src="https://img.shields.io/badge/Discord-Game%20Automation-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord Badge"/>
     <img src="https://img.shields.io/badge/language-JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript Badge"/>
     <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="MIT License Badge"/>
     <br>
     <a href="README_RU.md"><img src="https://img.shields.io/badge/Русская%20версия-Читать-blue?style=for-the-badge&labelColor=darkblue" alt="Russian Version Badge"/></a>
 </div>
 
-<p align="center">
-    <img src="https://i.imgur.com/8sYP3Jo.png" alt="The Last Meadow Game" width="400"/>
-</p>
-
-## 🌿 Overview
-
-An autoclicker script for the Discord game "The Last Meadow" that automates grass clicking, collecting bonuses, and buying upgrades. Save your time and fingers while maximizing your in-game earnings!
-
-## ✨ Features
-
-- 🖱️ **Auto-clicking** the grass at customizable intervals
-- 🌱 **Automatic collection** of weeds, lawnmowers, and lootboxes
-- 💰 **Auto-buying** of the cheapest available upgrades
-- ⚙️ **Customizable settings** with an easy-to-use interface
-- 🌓 **Dark mode** support
-- 🌍 **Multi-language** support (English and Russian)
-
-## 📋 How to Use
-
-1. Open Discord in your web browser
-2. Join a server that has "The Last Meadow" game available
-3. Open the game
-4. Press F12 to open Developer Tools (or right-click and select "Inspect")
-5. Go to the "Console" tab
-6. Copy the entire content of [`script.js`](https://raw.githubusercontent.com/mudachyo/Discord-The-Last-Meadow/refs/heads/main/script.js) file
-7. Paste it into the console and press Enter
-
-The autoclicker interface should appear as a gear icon (⚙️) in the bottom right corner of the screen. Click it to open settings.
+## Overview
 
 <p align="center">
-    <img src="https://i.imgur.com/BJTFcm3.png" alt="Settings Panel" width="300"/>
+  <img src="Meadow.png" alt="Game">
 </p>
 
-## ⚙️ Settings
+Automation script for Discord activities with gameplay helpers for:
+1. Repeated action clicking
+2. 3x3 triplet matching game flow
+3. Arrow sequence game flow
 
-- **Enable autoclicker**: Turn the auto-clicking functionality on/off
-- **Collect weeds**: Automatically collect weeds when they appear
-- **Activate lawnmowers**: Automatically use lawnmowers when they appear
-- **Open lootboxes**: Automatically open lootboxes when they appear
-- **Auto-buy upgrades**: Automatically purchase the cheapest available upgrades
-- **Click interval**: Set how fast the autoclicker clicks (in milliseconds)
-- **Bonus check interval**: Set how often to check for bonuses (weeds, lawnmowers, lootboxes)
-- **Purchase check interval**: Set how often to check for available upgrades to buy
-- **Dark mode**: Toggle between light and dark interface
-- **Language**: Switch between English and Russian
+The script is designed to run directly from Discord DevTools Console.
+
+## Features
+
+- Automatic interaction with supported game activities
+- Looping gameplay with restart/wait handling for cooldown states
+- Continue-button handling when rounds end
+- Runtime controls (start, stop, status, unload)
+- Compatibility aliases for command convenience
+
+## Script File
+
+Use this file:
+- [script.js](script.js)
+
+## How to Enable DevTools in Discord Desktop
+
+Use WIN+R to open the Windows Run dialog and open the settings folder for your Discord build:
+
+1. Discord: `%APPDATA%\Discord\`
+2. Discord PTB (Public Test Build): `%APPDATA%\DiscordPTB\`
+3. Discord Canary: `%APPDATA%\discordcanary\`
+
+Then:
+
+1. Open `settings.json` in that folder.
+2. It helps to enable file extensions in Windows Explorer.
+3. Use a proper text editor (for example, Notepad++).
+4. Add this key:
+
+```json
+"DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING": true
+```
+
+Example before:
+
+```json
+{
+    "BACKGROUND_COLOR": "#202225",
+    "IS_MAXIMIZED": false,
+    "IS_MINIMIZED": false,
+    "WINDOW_BOUNDS": {
+        "x": 288,
+        "y": 51,
+        "width": 1591,
+        "height": 919
+    },
+    "OPEN_ON_STARTUP": false
+}
+```
+
+Example after:
+
+```json
+{
+    "BACKGROUND_COLOR": "#202225",
+    "IS_MAXIMIZED": false,
+    "IS_MINIMIZED": false,
+    "WINDOW_BOUNDS": {
+        "x": 288,
+        "y": 51,
+        "width": 1591,
+        "height": 919
+    },
+    "OPEN_ON_STARTUP": false,
+    "DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING": true
+}
+```
+
+Important: the comma after `"OPEN_ON_STARTUP": false` is required before adding the new key.
+
+## How to Use
+
+1. Open Discord and enter the game screen.
+2. Open DevTools Console.
+3. Copy the content of [script.js](script.js).
+4. Paste it into Console and press Enter.
+5. All modules start automatically.
+
+## Commands
+
+### Global
+
+- window.discordGameBots.startAll()
+- window.discordGameBots.stopAll()
+- window.discordGameBots.status()
+- window.discordGameBots.unload()
+
+### Per Module
+
+- window.discordGameBots.adventure.start()
+- window.discordGameBots.triplet.start()
+- window.discordGameBots.arrow.start()
+
+### Compatibility Aliases
+
+- window.adventureClicker
+- window.tripletGridBot
+- window.arrowSequenceBot
 
 ## ⚠️ Disclaimer
 
-This script is for educational purposes only. Use at your own risk. Using automation scripts might violate Discord's Terms of Service.
+This script is for educational purposes only. Use at your own risk. Automation may violate Discord Terms of Service.
 
 ## 📬 Contact
 
@@ -64,4 +129,4 @@ For questions or suggestions, contact me on Telegram: [@mudachyo](https://t.me/m
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under MIT. See [LICENSE](LICENSE).
