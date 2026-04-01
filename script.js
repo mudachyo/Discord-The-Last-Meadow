@@ -1,666 +1,618 @@
-(function() {
-    'use strict';
-    
-    console.log('The Last Meadow autoclicker script started');
-    
-    // Языковые настройки
-    const translations = {
-        'ru': {
-            title: 'Настройки автокликера',
-            clickerOn: 'Включить автокликер',
-            weeds: 'Собирать сорняки',
-            lawnmowers: 'Активировать газонокосилки',
-            lootboxes: 'Открывать лутбоксы',
-            autoBuy: 'Автопокупка улучшений',
-            clickInterval: 'Интервал кликов (мс)',
-            bonusInterval: 'Интервал проверки бонусов (мс)',
-            buyInterval: 'Интервал проверки покупок (мс)',
-            darkMode: 'Темная тема',
-            language: 'Язык',
-            currentCoins: 'Текущее количество монет',
-            foundWeeds: 'Найдено сорняков',
-            foundLawnmowers: 'Найдено газонокосилок', 
-            foundLootboxes: 'Найдено лутбоксов',
-            noUpgrades: 'Доступных улучшений не найдено',
-            buying: 'Покупаем',
-            autoClickerStarted: 'Автокликер запущен с интервалом',
-            autoClickerStopped: 'Автокликер остановлен',
-            bonusCollectionStarted: 'Сбор бонусов активирован с интервалом',
-            autoBuyStarted: 'Автопокупка активирована с интервалом',
-            ms: 'мс',
-            coins: 'монет'
-        },
-        'en': {
-            title: 'Autoclicker Settings',
-            clickerOn: 'Enable autoclicker',
-            weeds: 'Collect weeds',
-            lawnmowers: 'Activate lawnmowers',
-            lootboxes: 'Open lootboxes',
-            autoBuy: 'Auto-buy upgrades',
-            clickInterval: 'Click interval (ms)',
-            bonusInterval: 'Bonus check interval (ms)',
-            buyInterval: 'Purchase check interval (ms)',
-            darkMode: 'Dark mode',
-            language: 'Language',
-            currentCoins: 'Current coins',
-            foundWeeds: 'Found weeds',
-            foundLawnmowers: 'Found lawnmowers',
-            foundLootboxes: 'Found lootboxes',
-            noUpgrades: 'No available upgrades found',
-            buying: 'Buying',
-            autoClickerStarted: 'Autoclicker started with interval',
-            autoClickerStopped: 'Autoclicker stopped',
-            bonusCollectionStarted: 'Bonus collection activated with interval',
-            autoBuyStarted: 'Auto-buy activated with interval',
-            ms: 'ms',
-            coins: 'coins'
-        }
-    };
-    
-    // Настройки по умолчанию
-    const config = {
-        clickInterval: 200,
-        enabled: false,
-        collectWeeds: true,
-        autoBuy: true,
-        buyInterval: 2000,
-        collectLawnmowers: true,
-        collectLootboxes: true,
-        collectInterval: 1000,
-        darkMode: true,
-        language: 'en'
-    };
-    
-    // Функция для получения текста в зависимости от выбранного языка
-    function t(key) {
-        return translations[config.language][key] || key;
-    }
-    
-    // Функция для проверки наличия элементов игры на странице
-    function isGamePage() {
-        const grassElement = document.querySelector('.default__9026a.logo_cf3f70, div[class*="logo_cf3f70"]');
-        return !!grassElement;
-    }
-    
-    // Функция для клика в случайную точку элемента
-    function clickRandomly() {
-        const grassElement = document.querySelector('.default__9026a.logo_cf3f70, div[class*="logo_cf3f70"]');
-        
-        if (grassElement) {
-            const rect = grassElement.getBoundingClientRect();
-            
-            // Генерируем случайные координаты внутри элемента
-            const x = rect.left + Math.random() * rect.width;
-            const y = rect.top + Math.random() * rect.height;
-            
-            // Создаем и отправляем клик
-            const clickEvent = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-                clientX: x,
-                clientY: y
-            });
-            
-            grassElement.dispatchEvent(clickEvent);
-        }
-    }
+/*
+  Discord games unified bot (browser console/userscript style).
 
-    // Функция для поиска и сбора сорняков
-    function findAndCollectWeeds() {
-        if (!config.collectWeeds) return;
-        
-        const weeds = document.querySelectorAll('.weed_fa03d7, img[class*="weed_"]');
-        
-        if (weeds.length > 0) {
-            console.log(`${t('foundWeeds')}: ${weeds.length}`);
-            weeds.forEach(weed => {
-                weed.click();
-            });
-        }
-    }
-    
-    // Функция для поиска и активации газонокосилок
-    function findAndClickLawnmowers() {
-        if (!config.collectLawnmowers) return;
-        
-        const lawnmowers = document.querySelectorAll('.lawnmower__78658, [class*="lawnmower_"]');
-        
-        if (lawnmowers.length > 0) {
-            console.log(`${t('foundLawnmowers')}: ${lawnmowers.length}`);
-            lawnmowers.forEach(lawnmower => {
-                lawnmower.click();
-            });
-        }
-    }
-    
-    // Функция для поиска и открытия лутбоксов
-    function findAndClickLootboxes() {
-        if (!config.collectLootboxes) return;
-        
-        const lootboxes = document.querySelectorAll('.lootbox_cb9930 .cat__9026a, [class*="lootbox_"] [role="button"]');
-        
-        if (lootboxes.length > 0) {
-            console.log(`${t('foundLootboxes')}: ${lootboxes.length}`);
-            lootboxes.forEach(lootbox => {
-                lootbox.click();
-            });
-        }
-    }
-    
-    // Функция для получения текущего количества монет
-    function getCurrentCoins() {
-        const pointsElement = document.querySelector('.pointsValue__7a0c3, [class*="pointsValue_"]');
-        if (pointsElement) {
-            const coins = parseInt(pointsElement.textContent.trim().replace(/\D/g, ''));
-            return isNaN(coins) ? 0 : coins;
-        }
-        return 0;
-    }
-    
-    // Функция для поиска и покупки самого дешевого улучшения
-    function buyUpgrades() {
-        if (!config.autoBuy) return;
-        
-        const currentCoins = getCurrentCoins();
-        console.log(`${t('currentCoins')}: ${currentCoins}`);
-        
-        // Если монет меньше, чем потенциально может стоить улучшение, выходим
-        if (currentCoins < 100) return;
-        
-        // Собираем все доступные улучшения
-        const items = [];
-        
-        // Ищем все возможные улучшения (основной магазин и специальные улучшения)
-        const allUpgrades = document.querySelectorAll(
-            '.clickerButton_e9638b.enabled_e9638b, ' + 
-            '[class*="clickerButton_"][class*="enabled_"]'
-        );
-        
-        allUpgrades.forEach(item => {
-            // Получаем стоимость улучшения
-            const costElement = item.querySelector('.text__73a39, [class*="text_"]');
-            if (costElement) {
-                const cost = parseInt(costElement.textContent.trim());
-                if (!isNaN(cost)) {
-                    const name = item.getAttribute('aria-label') || 'Улучшение';
-                    items.push({
-                        element: item,
-                        name: name,
-                        cost: cost
-                    });
-                }
-            }
-        });
-        
-        // Если улучшений нет, выходим
-        if (items.length === 0) {
-            console.log(t('noUpgrades'));
-            return;
-        }
-        
-        // Сортируем по цене (от дешевых к дорогим)
-        items.sort((a, b) => a.cost - b.cost);
-        
-        // Покупаем самое дешевое улучшение, которое можем себе позволить
-        for (const item of items) {
-            if (item.cost <= currentCoins) {
-                console.log(`${t('buying')}: ${item.name} (${item.cost} ${t('coins')})`);
-                item.element.click();
-                break;
-            }
-        }
-    }
+  Includes:
+  - Adventure autoclicker
+  - Triplet 3x3 bot
+  - Arrow sequence bot
 
-    // Создание стилей для темной темы
-    function createStyles() {
-        const style = document.createElement('style');
-        style.id = 'grass-clicker-styles';
-        style.textContent = `
-            #clicker-settings-btn {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                padding: 10px;
-                border: none;
-                border-radius: 50%;
-                font-size: 20px;
-                width: 50px;
-                height: 50px;
-                cursor: pointer;
-                z-index: 10000;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                transition: all 0.3s ease;
-            }
-            
-            #clicker-settings-btn.light {
-                background: #4CAF50;
-                color: white;
-            }
-            
-            #clicker-settings-btn.dark {
-                background: #388E3C;
-                color: #F5F5F5;
-            }
-            
-            #clicker-settings-panel {
-                position: fixed;
-                bottom: 80px;
-                right: 20px;
-                width: 280px;
-                padding: 15px;
-                border-radius: 10px;
-                z-index: 10000;
-                display: none;
-                font-family: Arial, sans-serif;
-                max-height: 80vh;
-                overflow-y: auto;
-                transition: all 0.3s ease;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            }
-            
-            #clicker-settings-panel.light {
-                background: white;
-                color: #333;
-            }
-            
-            #clicker-settings-panel.dark {
-                background: #1E1E1E;
-                color: #E0E0E0;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            }
-            
-            #clicker-settings-panel h3 {
-                margin-top: 0;
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-                border-bottom: 1px solid;
-            }
-            
-            #clicker-settings-panel.light h3 {
-                color: #4CAF50;
-                border-color: #E0E0E0;
-            }
-            
-            #clicker-settings-panel.dark h3 {
-                color: #81C784;
-                border-color: #424242;
-            }
-            
-            .setting-group {
-                margin-bottom: 15px;
-                padding-bottom: 15px;
-                border-bottom: 1px solid;
-            }
-            
-            #clicker-settings-panel.light .setting-group {
-                border-color: #E0E0E0;
-            }
-            
-            #clicker-settings-panel.dark .setting-group {
-                border-color: #424242;
-            }
-            
-            .setting-item {
-                margin-top: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-            
-            .slider-container {
-                width: 100%;
-            }
-            
-            .slider-container label {
-                display: block;
-                margin-bottom: 5px;
-            }
-            
-            .slider-row {
-                display: flex;
-                align-items: center;
-            }
-            
-            input[type="range"] {
-                flex-grow: 1;
-                margin-right: 10px;
-            }
-            
-            .slider-value {
-                min-width: 40px;
-                text-align: right;
-            }
-            
-            select {
-                padding: 5px;
-                border-radius: 5px;
-            }
-            
-            #clicker-settings-panel.light select {
-                background: white;
-                color: #333;
-                border: 1px solid #CCCCCC;
-            }
-            
-            #clicker-settings-panel.dark select {
-                background: #2D2D2D;
-                color: #E0E0E0;
-                border: 1px solid #555555;
-            }
-            
-            input[type="checkbox"] {
-                margin-right: 10px;
-            }
-            
-            .telegram-link {
-                text-align: center;
-                margin-top: 15px;
-                font-size: 14px;
-            }
-            
-            .telegram-link a {
-                color: #0088cc;
-                text-decoration: none;
-                transition: color 0.3s ease;
-            }
-            
-            .telegram-link a:hover {
-                color: #005580;
-                text-decoration: underline;
-            }
-            
-            #clicker-settings-panel.dark .telegram-link a {
-                color: #62B0E8;
-            }
-            
-            #clicker-settings-panel.dark .telegram-link a:hover {
-                color: #9CCEF0;
-            }
-        `;
-        document.head.appendChild(style);
-    }
+  Main commands:
+  - window.discordGameBots.adventure.start()
+  - window.discordGameBots.triplet.start()
+  - window.discordGameBots.arrow.start()
+  - window.discordGameBots.startAll()
+  - window.discordGameBots.stopAll()
+  - window.discordGameBots.status()
+  - window.discordGameBots.unload()
+*/
 
-    // Создание интерфейса настроек
-    function createSettingsUI() {
-        // Проверяем, нет ли уже кнопки настроек
-        if (document.getElementById('clicker-settings-btn')) {
-            return;
-        }
-        
-        console.log('Создаю интерфейс настроек');
-        
-        // Создаем стили
-        createStyles();
-        
-        const settingsButton = document.createElement('button');
-        settingsButton.id = 'clicker-settings-btn';
-        settingsButton.className = config.darkMode ? 'dark' : 'light';
-        settingsButton.textContent = '⚙️';
-        
-        const settingsPanel = document.createElement('div');
-        settingsPanel.id = 'clicker-settings-panel';
-        settingsPanel.className = config.darkMode ? 'dark' : 'light';
-        
-        settingsPanel.innerHTML = `
-            <h3>${t('title')}</h3>
-            
-            <div class="setting-group">
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="script-enabled" ${config.enabled ? 'checked' : ''}>
-                        ${t('clickerOn')}
-                    </label>
-                </div>
-                
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="collect-weeds" ${config.collectWeeds ? 'checked' : ''}>
-                        ${t('weeds')}
-                    </label>
-                </div>
-                
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="collect-lawnmowers" ${config.collectLawnmowers ? 'checked' : ''}>
-                        ${t('lawnmowers')}
-                    </label>
-                </div>
-                
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="collect-lootboxes" ${config.collectLootboxes ? 'checked' : ''}>
-                        ${t('lootboxes')}
-                    </label>
-                </div>
-                
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="auto-buy" ${config.autoBuy ? 'checked' : ''}>
-                        ${t('autoBuy')}
-                    </label>
-                </div>
-            </div>
-            
-            <div class="setting-group">
-                <div class="setting-item">
-                    <div class="slider-container">
-                        <label>${t('clickInterval')}</label>
-                        <div class="slider-row">
-                            <input type="range" id="click-interval" min="50" max="1000" value="${config.clickInterval}">
-                            <span id="interval-value" class="slider-value">${config.clickInterval}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="setting-item">
-                    <div class="slider-container">
-                        <label>${t('bonusInterval')}</label>
-                        <div class="slider-row">
-                            <input type="range" id="collect-interval" min="500" max="3000" step="100" value="${config.collectInterval}">
-                            <span id="collect-interval-value" class="slider-value">${config.collectInterval}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="setting-item">
-                    <div class="slider-container">
-                        <label>${t('buyInterval')}</label>
-                        <div class="slider-row">
-                            <input type="range" id="buy-interval" min="500" max="5000" step="500" value="${config.buyInterval}">
-                            <span id="buy-interval-value" class="slider-value">${config.buyInterval}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="setting-group">
-                <div class="setting-item">
-                    <label>${t('darkMode')}</label>
-                    <input type="checkbox" id="dark-mode" ${config.darkMode ? 'checked' : ''}>
-                </div>
-                
-                <div class="setting-item">
-                    <label>${t('language')}</label>
-                    <select id="language-select">
-                        <option value="ru" ${config.language === 'ru' ? 'selected' : ''}>Русский</option>
-                        <option value="en" ${config.language === 'en' ? 'selected' : ''}>English</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="telegram-link">
-                <a href="https://t.me/mudachyo" target="_blank">@mudachyo</a>
-            </div>
-        `;
-        
-        // Добавляем элементы в body
-        document.body.appendChild(settingsButton);
-        document.body.appendChild(settingsPanel);
-        
-        // Обработчики событий для настроек
-        settingsButton.addEventListener('click', () => {
-            settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
-        });
-        
-        // Обработчики для чекбоксов
-        document.getElementById('script-enabled').addEventListener('change', (e) => {
-            config.enabled = e.target.checked;
-            startScripts();
-        });
-        
-        document.getElementById('collect-weeds').addEventListener('change', (e) => {
-            config.collectWeeds = e.target.checked;
-            startScripts();
-        });
-        
-        document.getElementById('collect-lawnmowers').addEventListener('change', (e) => {
-            config.collectLawnmowers = e.target.checked;
-            startScripts();
-        });
-        
-        document.getElementById('collect-lootboxes').addEventListener('change', (e) => {
-            config.collectLootboxes = e.target.checked;
-            startScripts();
-        });
-        
-        document.getElementById('auto-buy').addEventListener('change', (e) => {
-            config.autoBuy = e.target.checked;
-            startScripts();
-        });
-        
-        // Обработчики для слайдеров
-        const intervalSlider = document.getElementById('click-interval');
-        const intervalDisplay = document.getElementById('interval-value');
-        
-        intervalSlider.addEventListener('input', (e) => {
-            config.clickInterval = parseInt(e.target.value);
-            intervalDisplay.textContent = config.clickInterval;
-            startScripts();
-        });
-        
-        const collectIntervalSlider = document.getElementById('collect-interval');
-        const collectIntervalDisplay = document.getElementById('collect-interval-value');
-        
-        collectIntervalSlider.addEventListener('input', (e) => {
-            config.collectInterval = parseInt(e.target.value);
-            collectIntervalDisplay.textContent = config.collectInterval;
-            startScripts();
-        });
-        
-        const buyIntervalSlider = document.getElementById('buy-interval');
-        const buyIntervalDisplay = document.getElementById('buy-interval-value');
-        
-        buyIntervalSlider.addEventListener('input', (e) => {
-            config.buyInterval = parseInt(e.target.value);
-            buyIntervalDisplay.textContent = config.buyInterval;
-            startScripts();
-        });
-        
-        // Обработчики для темы и языка
-        document.getElementById('dark-mode').addEventListener('change', (e) => {
-            config.darkMode = e.target.checked;
-            updateTheme();
-        });
-        
-        document.getElementById('language-select').addEventListener('change', (e) => {
-            config.language = e.target.value;
-            updateLanguage();
-        });
-        
-        console.log('Интерфейс настроек создан');
-    }
-    
-    // Обновление темы
-    function updateTheme() {
-        const settingsBtn = document.getElementById('clicker-settings-btn');
-        const settingsPanel = document.getElementById('clicker-settings-panel');
-        
-        if (config.darkMode) {
-            settingsBtn.className = 'dark';
-            settingsPanel.className = 'dark';
-        } else {
-            settingsBtn.className = 'light';
-            settingsPanel.className = 'light';
-        }
-    }
-    
-    // Обновление языка
-    function updateLanguage() {
-        // Полностью обновляем UI с новым языком
-        const settingsPanel = document.getElementById('clicker-settings-panel');
-        if (settingsPanel) {
-            settingsPanel.remove();
-            document.getElementById('clicker-settings-btn').remove();
-            createSettingsUI();
-        }
-    }
+(function () {
+  "use strict";
 
-    // Функция для сбора всех бонусов
-    function collectAllBonuses() {
-        findAndCollectWeeds();
-        findAndClickLawnmowers();
-        findAndClickLootboxes();
-    }
+  if (window.discordGameBots && typeof window.discordGameBots.unload === "function") {
+    window.discordGameBots.unload();
+  }
 
-    // Запуск основных функций
-    let clickIntervalId = null;
-    let collectIntervalId = null;
-    let buyIntervalId = null;
-    
-    function startScripts() {
-        // Останавливаем предыдущие интервалы
-        if (clickIntervalId) clearInterval(clickIntervalId);
-        if (collectIntervalId) clearInterval(collectIntervalId);
-        if (buyIntervalId) clearInterval(buyIntervalId);
-        
-        if (config.enabled) {
-            console.log(`${t('autoClickerStarted')} ${config.clickInterval}${t('ms')}`);
-            clickIntervalId = setInterval(clickRandomly, config.clickInterval);
-        } else {
-            console.log(t('autoClickerStopped'));
-        }
-        
-        // Объединяем все бонусы в один интервал
-        if (config.collectWeeds || config.collectLawnmowers || config.collectLootboxes) {
-            console.log(`${t('bonusCollectionStarted')} ${config.collectInterval}${t('ms')}`);
-            collectIntervalId = setInterval(collectAllBonuses, config.collectInterval);
-        }
-        
-        if (config.autoBuy) {
-            console.log(`${t('autoBuyStarted')} ${config.buyInterval}${t('ms')}`);
-            buyIntervalId = setInterval(buyUpgrades, config.buyInterval);
-        }
-    }
-    
-    // Инициализация скрипта
-    function init() {
-        if (!isGamePage()) {
-            console.log('Это не страница игры, скрипт не активирован');
-            return;
-        }
-        
-        console.log('Обнаружена страница игры, инициализирую скрипт');
-        createSettingsUI();
-    }
-    
-    // Запускаем инициализацию с небольшой задержкой
-    setTimeout(init, 1000);
-    
-    // Наблюдатель за изменениями DOM для повторной инициализации при необходимости
-    const observer = new MutationObserver((mutations) => {
-        if (!document.getElementById('clicker-settings-btn') && isGamePage()) {
-            console.log('Страница изменилась, перезапускаю инициализацию');
-            init();
-        }
+  function sleep(ms) {
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, ms);
     });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Повторная проверка каждые 5 секунд для надежности
-    setInterval(() => {
-        if (!document.getElementById('clicker-settings-btn') && isGamePage()) {
-            init();
+  }
+
+  function clickElement(el) {
+    el.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true }));
+    el.click();
+  }
+
+  function isDisabledButton(button) {
+    if (!button) return true;
+    if (button.classList.contains("disabled__65fca")) return true;
+    var container = button.querySelector(".container__65fca");
+    if (container && container.classList.contains("containerDisabled__65fca")) return true;
+    if (button.getAttribute("aria-disabled") === "true") return true;
+    return false;
+  }
+
+  function makeAdventureBot() {
+    var state = {
+      timerId: null,
+      intervalMs: 60,
+      clicks: 0,
+      active: false,
+    };
+
+    function findAdventureButton() {
+      var selectors = [
+        ".game__5c62c .activityButton__8af73 [role='button']",
+        ".activityButton__8af73 .button__65fca.clickable__5c90e[role='button']",
+        ".activityButton__8af73 .clickable__5c90e[role='button']",
+        ".activityButton__8af73 [role='button']",
+      ];
+
+      for (var i = 0; i < selectors.length; i += 1) {
+        var button = document.querySelector(selectors[i]);
+        if (button) return button;
+      }
+
+      return null;
+    }
+
+    function tick() {
+      var button = findAdventureButton();
+      if (!button) return;
+      button.click();
+      state.clicks += 1;
+    }
+
+    function start() {
+      if (state.active) return;
+      state.timerId = window.setInterval(tick, state.intervalMs);
+      state.active = true;
+      console.log("[unified.adventure] Started");
+    }
+
+    function stop() {
+      if (!state.active) return;
+      window.clearInterval(state.timerId);
+      state.timerId = null;
+      state.active = false;
+      console.log("[unified.adventure] Stopped");
+    }
+
+    function status() {
+      return {
+        active: state.active,
+        intervalMs: state.intervalMs,
+        clicks: state.clicks,
+        buttonFound: Boolean(findAdventureButton()),
+      };
+    }
+
+    function unload() {
+      stop();
+    }
+
+    return {
+      start: start,
+      stop: stop,
+      status: status,
+      unload: unload,
+    };
+  }
+
+  function makeTripletBot() {
+    var state = {
+      running: false,
+      workerToken: 0,
+      rounds: 0,
+      tripletsClicked: 0,
+      clickDelayMs: 120,
+      roundDelayMs: 450,
+      actionDelayMs: 700,
+      lastActionAt: 0,
+      continueClicks: 0,
+      restartClicks: 0,
+    };
+
+    function canDoActionNow() {
+      return Date.now() - state.lastActionAt >= state.actionDelayMs;
+    }
+
+    function markAction() {
+      state.lastActionAt = Date.now();
+    }
+
+    function getGridItems() {
+      var items = document.querySelectorAll(".grid__0dcd3 .gridItem__0dcd3[role='button']");
+      if (items.length > 0) return Array.prototype.slice.call(items);
+
+      var fallback = document.querySelectorAll(".grid__0dcd3 [role='button']");
+      return Array.prototype.slice.call(fallback);
+    }
+
+    function getGlyphSignature(item) {
+      var svg =
+        item.querySelector("svg.gridAssetGlyph__0dcd3") ||
+        item.querySelector(".gridAssetFront__0dcd3 svg") ||
+        item.querySelector("svg");
+
+      if (!svg) return null;
+
+      var viewBox = svg.getAttribute("viewBox") || "";
+      var width = svg.getAttribute("width") || "";
+      var height = svg.getAttribute("height") || "";
+      var paths = svg.querySelectorAll("path");
+      var parts = [viewBox, width, height, String(paths.length)];
+
+      for (var i = 0; i < paths.length; i += 1) {
+        var d = paths[i].getAttribute("d") || "";
+        parts.push(d);
+      }
+
+      return parts.join("|");
+    }
+
+    function isMatched(item) {
+      return item && item.classList && item.classList.contains("matched__0dcd3");
+    }
+
+    function isClickable(item) {
+      if (!item || !item.isConnected) return false;
+      if (isMatched(item)) return false;
+      if (item.getAttribute("aria-disabled") === "true") return false;
+      if (item.hasAttribute("disabled")) return false;
+
+      var style = window.getComputedStyle(item);
+      if (style.pointerEvents === "none") return false;
+      if (style.visibility === "hidden") return false;
+      if (style.display === "none") return false;
+
+      return true;
+    }
+
+    function findContinueButton() {
+      var buttons = document.querySelectorAll(".button__65fca.buttonWhite__65fca.clickable__5c90e[role='button']");
+
+      for (var i = 0; i < buttons.length; i += 1) {
+        var btn = buttons[i];
+        if (isDisabledButton(btn)) continue;
+
+        var inActivityCard = !!btn.closest(".activityButton__8af73");
+        var hasActivityAsset = !!btn.querySelector(".activityButtonAsset__8af73");
+        if (!inActivityCard && !hasActivityAsset) return btn;
+      }
+
+      return null;
+    }
+
+    function findBattleStartButton() {
+      var candidates = document.querySelectorAll(
+        ".activityButton__8af73 .button__65fca.buttonWhite__65fca.clickable__5c90e[role='button']"
+      );
+
+      for (var i = 0; i < candidates.length; i += 1) {
+        var btn = candidates[i];
+        var icon = btn.querySelector("img.activityButtonAsset__8af73");
+        if (!icon) continue;
+
+        var src = icon.getAttribute("src") || "";
+        if (src.indexOf("0492e3943e17e3e6ef69e8bf91b165658f9ed36c96fe3b3d78e354e99e5cbcc4") === -1) {
+          continue;
         }
-    }, 5000);
+
+        return btn;
+      }
+
+      return null;
+    }
+
+    function pickTriplet(items) {
+      var groups = Object.create(null);
+
+      for (var i = 0; i < items.length; i += 1) {
+        var item = items[i];
+        if (!isClickable(item)) continue;
+
+        var key = getGlyphSignature(item);
+        if (!key) continue;
+
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(item);
+      }
+
+      var keys = Object.keys(groups);
+      for (var j = 0; j < keys.length; j += 1) {
+        var list = groups[keys[j]];
+        if (list.length >= 3) return list.slice(0, 3);
+      }
+
+      return null;
+    }
+
+    function countUnmatched(items) {
+      var count = 0;
+      for (var i = 0; i < items.length; i += 1) {
+        if (!isMatched(items[i])) count += 1;
+      }
+      return count;
+    }
+
+    async function workerLoop(token) {
+      while (state.running && token === state.workerToken) {
+        var items = getGridItems();
+        var unmatched = countUnmatched(items);
+
+        if (unmatched === 0 && items.length > 0) {
+          if (canDoActionNow()) {
+            var continueButton = findContinueButton();
+            if (continueButton) {
+              clickElement(continueButton);
+              state.continueClicks += 1;
+              markAction();
+            }
+          }
+
+          await sleep(state.roundDelayMs);
+          continue;
+        }
+
+        if (items.length === 0) {
+          if (canDoActionNow()) {
+            var battleButton = findBattleStartButton();
+            if (battleButton && !isDisabledButton(battleButton)) {
+              clickElement(battleButton);
+              state.restartClicks += 1;
+              markAction();
+            }
+          }
+
+          await sleep(state.roundDelayMs);
+          continue;
+        }
+
+        var triplet = pickTriplet(items);
+        if (!triplet) {
+          await sleep(state.roundDelayMs);
+          continue;
+        }
+
+        for (var i = 0; i < triplet.length; i += 1) {
+          if (!state.running || token !== state.workerToken) return;
+          if (isClickable(triplet[i])) {
+            clickElement(triplet[i]);
+            await sleep(state.clickDelayMs);
+          }
+        }
+
+        state.tripletsClicked += 1;
+        state.rounds += 1;
+        await sleep(state.roundDelayMs);
+      }
+    }
+
+    function start() {
+      if (state.running) return;
+      state.running = true;
+      state.workerToken += 1;
+      workerLoop(state.workerToken);
+      console.log("[unified.triplet] Started");
+    }
+
+    function stop() {
+      if (!state.running) return;
+      state.running = false;
+      state.workerToken += 1;
+      console.log("[unified.triplet] Stopped");
+    }
+
+    function status() {
+      var items = getGridItems();
+      var unmatched = countUnmatched(items);
+      var battleButton = findBattleStartButton();
+      return {
+        running: state.running,
+        gridItems: items.length,
+        unmatchedItems: unmatched,
+        allMatchedNow: items.length > 0 && unmatched === 0,
+        rounds: state.rounds,
+        tripletsClicked: state.tripletsClicked,
+        continueClicks: state.continueClicks,
+        restartClicks: state.restartClicks,
+        clickDelayMs: state.clickDelayMs,
+        roundDelayMs: state.roundDelayMs,
+        actionDelayMs: state.actionDelayMs,
+        battleButtonReadyNow: Boolean(battleButton && !isDisabledButton(battleButton)),
+        tripletFoundNow: Boolean(pickTriplet(items)),
+      };
+    }
+
+    function unload() {
+      stop();
+    }
+
+    return {
+      start: start,
+      stop: stop,
+      status: status,
+      unload: unload,
+    };
+  }
+
+  function makeArrowBot() {
+    var state = {
+      running: false,
+      workerToken: 0,
+      roundDelayMs: 350,
+      keyDelayMs: 80,
+      actionDelayMs: 700,
+      lastActionAt: 0,
+      roundsSolved: 0,
+      keysPressed: 0,
+      continueSeen: false,
+      continueClicked: false,
+      continueClicks: 0,
+      startClicks: 0,
+    };
+
+    function canDoActionNow() {
+      return Date.now() - state.lastActionAt >= state.actionDelayMs;
+    }
+
+    function markAction() {
+      state.lastActionAt = Date.now();
+    }
+
+    function findContinueButton() {
+      var buttons = document.querySelectorAll(".button__65fca.buttonWhite__65fca.clickable__5c90e[role='button']");
+
+      for (var i = 0; i < buttons.length; i += 1) {
+        var btn = buttons[i];
+        if (isDisabledButton(btn)) continue;
+
+        if (btn.closest(".activityButton__8af73")) continue;
+        if (btn.querySelector(".activityButtonAsset__8af73")) continue;
+
+        return btn;
+      }
+
+      return null;
+    }
+
+    function findCraftStartButton() {
+      var candidates = document.querySelectorAll(
+        ".activityButton__8af73 .button__65fca.buttonWhite__65fca.clickable__5c90e[role='button']"
+      );
+
+      for (var i = 0; i < candidates.length; i += 1) {
+        var btn = candidates[i];
+        var icon = btn.querySelector("img.activityButtonAsset__8af73");
+        if (!icon) continue;
+
+        var src = icon.getAttribute("src") || "";
+        if (src.indexOf("b7febb5be9c15a67c50fc5978c3ecd1d258d0c424a0dc3ce41b2c8ac65c9e339") === -1) {
+          continue;
+        }
+
+        return btn;
+      }
+
+      return null;
+    }
+
+    function getSequenceNodes() {
+      return Array.prototype.slice.call(
+        document.querySelectorAll(".sequences__34527 .character__34527 img")
+      );
+    }
+
+    function mapAltToKey(altText) {
+      if (altText === "ArrowUp") return "ArrowUp";
+      if (altText === "ArrowDown") return "ArrowDown";
+      if (altText === "ArrowLeft") return "ArrowLeft";
+      if (altText === "ArrowRight") return "ArrowRight";
+      return null;
+    }
+
+    function readSequence() {
+      var nodes = getSequenceNodes();
+      if (nodes.length === 0) return [];
+
+      var keys = [];
+      for (var i = 0; i < nodes.length; i += 1) {
+        var altText = nodes[i].getAttribute("alt") || "";
+        var key = mapAltToKey(altText);
+        if (!key) return [];
+        keys.push(key);
+      }
+
+      return keys;
+    }
+
+    function dispatchArrowKey(key) {
+      var target = document.activeElement || document.body || document.documentElement;
+      var eventInit = {
+        key: key,
+        code: key,
+        bubbles: true,
+        cancelable: true,
+      };
+
+      target.dispatchEvent(new KeyboardEvent("keydown", eventInit));
+      target.dispatchEvent(new KeyboardEvent("keyup", eventInit));
+    }
+
+    async function playOneRound() {
+      var sequence = readSequence();
+      if (sequence.length === 0) return false;
+
+      for (var i = 0; i < sequence.length; i += 1) {
+        dispatchArrowKey(sequence[i]);
+        state.keysPressed += 1;
+        await sleep(state.keyDelayMs);
+      }
+
+      state.roundsSolved += 1;
+      return true;
+    }
+
+    async function workerLoop(token) {
+      while (state.running && token === state.workerToken) {
+        var continueButton = findContinueButton();
+        if (continueButton) {
+          state.continueSeen = true;
+
+          if (canDoActionNow()) {
+            clickElement(continueButton);
+            state.continueClicked = true;
+            state.continueClicks += 1;
+            markAction();
+          }
+
+          await sleep(state.roundDelayMs);
+          continue;
+        }
+
+        var sequenceNodes = getSequenceNodes();
+        if (sequenceNodes.length > 0) {
+          await playOneRound();
+          await sleep(state.roundDelayMs);
+          continue;
+        }
+
+        if (canDoActionNow()) {
+          var startButton = findCraftStartButton();
+          if (startButton && !isDisabledButton(startButton)) {
+            clickElement(startButton);
+            state.startClicks += 1;
+            markAction();
+          }
+        }
+
+        await sleep(state.roundDelayMs);
+      }
+    }
+
+    function start() {
+      if (state.running) return;
+      state.running = true;
+      state.workerToken += 1;
+      workerLoop(state.workerToken);
+      console.log("[unified.arrow] Started");
+    }
+
+    function stop() {
+      if (!state.running) return;
+      state.running = false;
+      state.workerToken += 1;
+      console.log("[unified.arrow] Stopped");
+    }
+
+    function status() {
+      var startButton = findCraftStartButton();
+      return {
+        running: state.running,
+        sequenceVisibleNow: getSequenceNodes().length > 0,
+        continueVisibleNow: Boolean(findContinueButton()),
+        startButtonVisibleNow: Boolean(startButton),
+        startButtonReadyNow: Boolean(startButton && !isDisabledButton(startButton)),
+        roundsSolved: state.roundsSolved,
+        keysPressed: state.keysPressed,
+        continueSeen: state.continueSeen,
+        continueClicked: state.continueClicked,
+        continueClicks: state.continueClicks,
+        startClicks: state.startClicks,
+        keyDelayMs: state.keyDelayMs,
+        roundDelayMs: state.roundDelayMs,
+        actionDelayMs: state.actionDelayMs,
+      };
+    }
+
+    function unload() {
+      stop();
+    }
+
+    return {
+      start: start,
+      stop: stop,
+      status: status,
+      unload: unload,
+    };
+  }
+
+  var bots = {
+    adventure: makeAdventureBot(),
+    triplet: makeTripletBot(),
+    arrow: makeArrowBot(),
+    startAll: function () {
+      bots.adventure.start();
+      bots.triplet.start();
+      bots.arrow.start();
+    },
+    stopAll: function () {
+      bots.adventure.stop();
+      bots.triplet.stop();
+      bots.arrow.stop();
+    },
+    status: function () {
+      var info = {
+        adventure: bots.adventure.status(),
+        triplet: bots.triplet.status(),
+        arrow: bots.arrow.status(),
+      };
+      console.log("[discordGameBots] Status:", info);
+      return info;
+    },
+    unload: function () {
+      bots.stopAll();
+
+      // Compatibility aliases cleanup.
+      try {
+        delete window.adventureClicker;
+      } catch (err1) {
+        window.adventureClicker = undefined;
+      }
+
+      try {
+        delete window.tripletGridBot;
+      } catch (err2) {
+        window.tripletGridBot = undefined;
+      }
+
+      try {
+        delete window.arrowSequenceBot;
+      } catch (err3) {
+        window.arrowSequenceBot = undefined;
+      }
+
+      try {
+        delete window.discordGameBots;
+      } catch (err4) {
+        window.discordGameBots = undefined;
+      }
+
+      console.log("[discordGameBots] Unloaded completely.");
+    },
+  };
+
+  // Compatibility aliases for old command names.
+  window.adventureClicker = bots.adventure;
+  window.tripletGridBot = bots.triplet;
+  window.arrowSequenceBot = bots.arrow;
+  window.discordGameBots = bots;
+
+  bots.startAll();
+  console.log("[discordGameBots] Loaded and started all bots. Use window.discordGameBots.status() to inspect.");
 })();
