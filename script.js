@@ -5,11 +5,13 @@
   - Adventure autoclicker
   - Triplet 3x3 bot
   - Arrow sequence bot
+  - Target click bot
 
   Main commands:
   - window.discordGameBots.adventure.start()
   - window.discordGameBots.triplet.start()
   - window.discordGameBots.arrow.start()
+  - window.discordGameBots.target.start()
   - window.discordGameBots.startAll()
   - window.discordGameBots.stopAll()
   - window.discordGameBots.status()
@@ -44,6 +46,33 @@
     if (container && container.classList.contains("containerDisabled__65fca")) return true;
     if (button.getAttribute("aria-disabled") === "true") return true;
     return false;
+  }
+
+  function extractAssetHashFromSrc(src) {
+    if (!src) return "";
+    var match = src.match(/\/([a-f0-9]{64})\.svg(?:\?|$)/i);
+    return match ? String(match[1]).toLowerCase() : "";
+  }
+
+  function getActivityButtonsWithAssetHash() {
+    var candidates = document.querySelectorAll(
+      ".activityButton__8af73 .button__65fca.buttonWhite__65fca.clickable__5c90e[role='button']"
+    );
+    var result = [];
+
+    for (var i = 0; i < candidates.length; i += 1) {
+      var btn = candidates[i];
+      var icon = btn.querySelector("img.activityButtonAsset__8af73");
+      if (!icon) continue;
+
+      var src = icon.getAttribute("src") || "";
+      result.push({
+        button: btn,
+        hash: extractAssetHashFromSrc(src),
+      });
+    }
+
+    return result;
   }
 
   function makeAdventureBot() {
@@ -199,22 +228,19 @@
     }
 
     function findBattleStartButton() {
-      var candidates = document.querySelectorAll(
-        ".activityButton__8af73 .button__65fca.buttonWhite__65fca.clickable__5c90e[role='button']"
-      );
+      var knownBattleHashes = {
+        "0492e3943e17e3e6ef69e8bf91b165658f9ed36c96fe3b3d78e354e99e5cbcc4": true,
+        "16fb25536f00a7996cbdf5bfff2ef0d09459f580af9e67d380263f5ead43055e": true,
+      };
+      var buttons = getActivityButtonsWithAssetHash();
 
-      for (var i = 0; i < candidates.length; i += 1) {
-        var btn = candidates[i];
-        var icon = btn.querySelector("img.activityButtonAsset__8af73");
-        if (!icon) continue;
-
-        var src = icon.getAttribute("src") || "";
-        if (src.indexOf("0492e3943e17e3e6ef69e8bf91b165658f9ed36c96fe3b3d78e354e99e5cbcc4") === -1) {
-          continue;
-        }
-
-        return btn;
+      for (var i = 0; i < buttons.length; i += 1) {
+        if (knownBattleHashes[buttons[i].hash]) return buttons[i].button;
       }
+
+      // Fallback: in reported layouts battle is usually the second activity button.
+      if (buttons.length >= 2) return buttons[1].button;
+      if (buttons.length >= 1) return buttons[0].button;
 
       return null;
     }
@@ -392,22 +418,19 @@
     }
 
     function findCraftStartButton() {
-      var candidates = document.querySelectorAll(
-        ".activityButton__8af73 .button__65fca.buttonWhite__65fca.clickable__5c90e[role='button']"
-      );
+      var knownCraftHashes = {
+        "b7febb5be9c15a67c50fc5978c3ecd1d258d0c424a0dc3ce41b2c8ac65c9e339": true,
+        "23aba2aedfd9bbaf53e3c3e64ca29c3671fd8c6d31439e4a37452ea501704e18": true,
+        "b6038208c7b31006aba89db1e1454425919275f8ac3a6afbff8b36db9946e710": true,
+      };
+      var buttons = getActivityButtonsWithAssetHash();
 
-      for (var i = 0; i < candidates.length; i += 1) {
-        var btn = candidates[i];
-        var icon = btn.querySelector("img.activityButtonAsset__8af73");
-        if (!icon) continue;
-
-        var src = icon.getAttribute("src") || "";
-        if (src.indexOf("b7febb5be9c15a67c50fc5978c3ecd1d258d0c424a0dc3ce41b2c8ac65c9e339") === -1) {
-          continue;
-        }
-
-        return btn;
+      for (var i = 0; i < buttons.length; i += 1) {
+        if (knownCraftHashes[buttons[i].hash]) return buttons[i].button;
       }
+
+      // Fallback: in reported layouts craft is usually the first activity button.
+      if (buttons.length >= 1) return buttons[0].button;
 
       return null;
     }
@@ -552,25 +575,117 @@
     };
   }
 
+  function makeTargetBot() {
+    var state = {
+      running: false,
+      workerToken: 0,
+      scanDelayMs: 45,
+      clicks: 0,
+    };
+
+    function isVisible(el) {
+      if (!el || !el.isConnected) return false;
+      var style = window.getComputedStyle(el);
+      if (style.display === "none") return false;
+      if (style.visibility === "hidden") return false;
+      if (style.pointerEvents === "none") return false;
+      return true;
+    }
+
+    function getTargetButtons() {
+      var buttons = document.querySelectorAll(
+        ".targetContainer_b6b008 .clickable__5c90e[role='button']"
+      );
+      if (buttons.length > 0) return Array.prototype.slice.call(buttons);
+
+      var imgs = document.querySelectorAll("img.target_b6b008[alt='target'], img[alt='target']");
+      var fallback = [];
+
+      for (var i = 0; i < imgs.length; i += 1) {
+        var btn = imgs[i].closest("[role='button']");
+        if (!btn) continue;
+        fallback.push(btn);
+      }
+
+      return fallback;
+    }
+
+    async function workerLoop(token) {
+      while (state.running && token === state.workerToken) {
+        var targetButtons = getTargetButtons();
+
+        for (var i = 0; i < targetButtons.length; i += 1) {
+          if (!state.running || token !== state.workerToken) return;
+
+          var btn = targetButtons[i];
+          if (!isVisible(btn)) continue;
+          clickElement(btn);
+          state.clicks += 1;
+        }
+
+        await sleep(state.scanDelayMs);
+      }
+    }
+
+    function start() {
+      if (state.running) return;
+      state.running = true;
+      state.workerToken += 1;
+      workerLoop(state.workerToken);
+      console.log("[unified.target] Started");
+    }
+
+    function stop() {
+      if (!state.running) return;
+      state.running = false;
+      state.workerToken += 1;
+      console.log("[unified.target] Stopped");
+    }
+
+    function status() {
+      return {
+        running: state.running,
+        targetsVisibleNow: getTargetButtons().length,
+        clicks: state.clicks,
+        scanDelayMs: state.scanDelayMs,
+      };
+    }
+
+    function unload() {
+      stop();
+    }
+
+    return {
+      start: start,
+      stop: stop,
+      status: status,
+      unload: unload,
+    };
+  }
+
   var bots = {
     adventure: makeAdventureBot(),
     triplet: makeTripletBot(),
     arrow: makeArrowBot(),
+    target: makeTargetBot(),
     startAll: function () {
       bots.adventure.start();
       bots.triplet.start();
       bots.arrow.start();
+      bots.target.start();
     },
     stopAll: function () {
       bots.adventure.stop();
       bots.triplet.stop();
       bots.arrow.stop();
+      bots.target.stop();
     },
     status: function () {
       var info = {
         adventure: bots.adventure.status(),
         triplet: bots.triplet.status(),
         arrow: bots.arrow.status(),
+        target: bots.target.status(),
       };
       console.log("[discordGameBots] Status:", info);
       return info;
@@ -598,8 +713,14 @@
       }
 
       try {
-        delete window.discordGameBots;
+        delete window.targetShooterBot;
       } catch (err4) {
+        window.targetShooterBot = undefined;
+      }
+
+      try {
+        delete window.discordGameBots;
+      } catch (err5) {
         window.discordGameBots = undefined;
       }
 
@@ -611,6 +732,7 @@
   window.adventureClicker = bots.adventure;
   window.tripletGridBot = bots.triplet;
   window.arrowSequenceBot = bots.arrow;
+  window.targetShooterBot = bots.target;
   window.discordGameBots = bots;
 
   bots.startAll();

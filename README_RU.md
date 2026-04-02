@@ -18,6 +18,7 @@
 1. Повторяющихся кликов
 2. Игры 3x3 с подбором троек
 3. Игры с последовательностями стрелок
+4. Игры с кликом по мишеням
 
 Скрипт запускается напрямую через Console в DevTools Discord.
 
@@ -112,12 +113,14 @@
 - window.discordGameBots.adventure.start()
 - window.discordGameBots.triplet.start()
 - window.discordGameBots.arrow.start()
+- window.discordGameBots.target.start()
 
 ### Алиасы для совместимости
 
 - window.adventureClicker
 - window.tripletGridBot
 - window.arrowSequenceBot
+- window.targetShooterBot
 
 ## Отказ от ответственности
 

@@ -18,6 +18,7 @@ Automation script for Discord activities with gameplay helpers for:
 1. Repeated action clicking
 2. 3x3 triplet matching game flow
 3. Arrow sequence game flow
+4. Target clicking game flow
 
 The script is designed to run directly from Discord DevTools Console.
 
@@ -112,12 +113,14 @@ Important: the comma after `"OPEN_ON_STARTUP": false` is required before adding 
 - window.discordGameBots.adventure.start()
 - window.discordGameBots.triplet.start()
 - window.discordGameBots.arrow.start()
+- window.discordGameBots.target.start()
 
 ### Compatibility Aliases
 
 - window.adventureClicker
 - window.tripletGridBot
 - window.arrowSequenceBot
+- window.targetShooterBot
 
 ## ⚠️ Disclaimer
 
